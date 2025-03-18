@@ -116,7 +116,9 @@ static UIApplication *_YYSharedApplication() {
         return NO;
     }
 }
-
+static void _finalizeStatement(const void *key, const void *value, void *context) {
+    sqlite3_finalize((sqlite3_stmt *)value);
+}
 - (BOOL)_dbClose {
     if (!_db) return YES;
     
@@ -124,7 +126,11 @@ static UIApplication *_YYSharedApplication() {
     BOOL retry = NO;
     BOOL stmtFinalized = NO;
     
-    if (_dbStmtCache) CFRelease(_dbStmtCache);
+//    if (_dbStmtCache) CFRelease(_dbStmtCache);
+    if (_dbStmtCache) {
+        CFDictionaryApplyFunction(_dbStmtCache, _finalizeStatement, NULL);
+        CFRelease(_dbStmtCache);
+    }
     _dbStmtCache = NULL;
     
     do {
